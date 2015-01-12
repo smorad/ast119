@@ -12,7 +12,7 @@ def hw1(nsteps=500, dx=.01, sigma=.1):
 	y = arange(-1, 1, dx)
 	#Create mesh
 	xx, yy = meshgrid(x, y)
-	#T is our resultant 2d vector
+	#T is our resultant vector
 	t = 1.0 / (2.0*pi*sigma**2) * exp(-(xx**2 + yy**2) / (2.0*sigma**2))
 	
 	#Zero first and last cols and rows
