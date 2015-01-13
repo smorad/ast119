@@ -9,7 +9,7 @@ def make_data(filename='hw2.dat', ngrid=100):
 	#Premature optimization is the root of all evil -D. Knuth
 	#
 	#Bitwise AND with 111...10, dropping 1's place if present
-	ngrid = ngrid & (sys.max_int-1)
+	ngrid = ngrid & (sys.min_int-1)
 
 	#2 lists with ngrid steps
 	x = arange(-2*pi, 2*pi, ngrid)
