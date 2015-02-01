@@ -9,7 +9,7 @@ import urllib2
 import os
 import struct
 from datetime import datetime
-
+from itertools import groupby
 
 def fetch_file(
   url = "http://lasp.colorado.edu/lisird/tss/sorce_ssi.csv?&time>=2010-01-01&time<2010-02-01",
@@ -40,15 +40,24 @@ def get_date(prompt):
   
   
 def hw4():
-  # format user date input into target url
-  dt_start = get_date("Enter beginning date(YYYY-MM-DD): ")
-  dt_end = get_date("Enter non-inclusive ending date(YYYY-MM-DD): ")
-  url = "http://lasp.colorado.edu/lisird/tss/sorce_ssi.csv?&time>=" + dt_start + "&time<" + dt_end
-
   # if data does not exist, fetch it
   localfile = "data"
   if not localfile in os.listdir('.'):
+    # format user date input into target url
+    dt_start = get_date("Enter beginning date(YYYY-MM-DD): ")
+    dt_end = get_date("Enter non-inclusive ending date(YYYY-MM-DD): ")
+    url = "http://lasp.colorado.edu/lisird/tss/sorce_ssi.csv?&time>=" + dt_start + "&time<" + dt_end
+    
     print "Warning: file " + localfile + " not found; retrieving from the web"
     fetch_file(url)
   
-  # step 2: TODO
+  # load table into multi dimensional array, [[day, wavelength, flux]...]
+  table = loadtxt("data", skiprows = (1), usecols = (0,1,2), delimiter = ",")
+  
+  # group flux readings into rows according to unique days, throwout NaN readings
+  flux = []
+  days = unique(table[:,0])
+  for day in days:
+    flux.append([row[2] for row in table if row[0] == day and not isnan(row[2])])
+
+  # TODO: continue to step 4
