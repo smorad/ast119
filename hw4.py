@@ -8,6 +8,7 @@ from matplotlib.pyplot import *
 import urllib2
 import os
 from datetime import datetime
+import scipy.integrate as integ
 
 def fetch_file(
   url = "http://lasp.colorado.edu/lisird/tss/sorce_ssi.csv?&time>=2010-01-01&time<2010-02-01",
@@ -58,4 +59,31 @@ def hw4():
   for day in days:
     flux.append([row[2] for row in table if row[0] == day and not isnan(row[2])])
 
-  # TODO: continue to step 4
+  #Creates an array of zeros. 
+  flux2=zeros(shape=(len(flux),len(flux[0])))
+    
+  #Now I'm taking that array, and turning the corresponding entries from flux into floats
+  for i in range(len(flux)):
+    for j in range(len(flux[i])):
+      flux2[i,j]=float(flux[i][j])
+    
+  #Empty array for the series of integrals
+  Qo2=[]
+    
+  #Defining Constants
+  h=6.626e-34
+  c=2.99792458e8
+    
+  for a in flux2:
+    #a is an array of intensities at each wavelength. h and c scale the integral.
+    Qo2.append(integ.simps((waves*10.0**-9)*a/(h*c),x=waves))
+    
+    
+  deltaQo2=(Qo2/mean(Qo2))-1
+    
+  print("Average value of Q(o2): " + str(mean(Qo2)) )
+  print("Delta Q: 25th Percentile = " + str(percentile(deltaQo2, 25)) + ", 75th percentile = " +
+  str(percentile(deltaQo2, 75)))
+  
+  #TODO: 7 onwards. Also, figure out the order-of-magnitude issue with our percentiles. Also, DeltaQO2 is plotted it looks wonky. 
+  
