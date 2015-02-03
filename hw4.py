@@ -55,10 +55,10 @@ def hw4():
   
   # Extract all unique days
   days = unique(table[:,0])
+  wavelengths = unique(table[:,1])
   
   # Initializing data and constants
   flux = []
-  wavelengths = []
   h = 6.626e-34
   c = 3.0e8
   
@@ -66,23 +66,20 @@ def hw4():
   # Each row of table has the format [day, wavelength, intensity]
   for day in days:
     fluxValues = []
-    waveValues = []
     for row in table:
       if row[0] == day:
         # Calculate flux using intensity and wavelength
         fluxValues.append((row[2] * row[1] * (10.0**-9)) / (h * c))
-        waveValues.append(row[1])
     # Throw out days with NaN readings
     if not isnan(fluxValues).any():
       flux.append(fluxValues)
-      wavelengths.append(waveValues)
         
   # Empty array for the series of integrals
   Qo2 = []
     
-  # Compute Qo2 for each day's readings
-  for readings,wl in zip(flux, wavelengths):
-    Qo2.append(integ.simps(readings, x=wl))
+  # Compute Qo2 for each day's flux calculations
+  for readings in flux:
+    Qo2.append(integ.simps(readings, x=wavelengths))
 
   # Print the mean Qo2, 25th, and 75th percentile of deltaQo2.
   deltaQo2 = (Qo2 / mean(Qo2)) - 1
