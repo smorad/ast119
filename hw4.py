@@ -53,35 +53,37 @@ def hw4():
   # Load table into multi dimensional array, [[day, wavelength, flux]...]
   table = loadtxt("data", skiprows = (1), usecols = (0,1,2), delimiter = ",")
   
-  # Extract all unique days and waves
+  # Extract all unique days
   days = unique(table[:,0])
-  waves = unique(table[:,1])
   
-  # Group flux readings into rows according to unique days, throwout NaN readings
+  # Initializing data and constants
   flux = []
+  wavelengths = []
+  h = 6.626e-34
+  c = 3.0e8
+  
+  # Group flux readings into rows according to unique days
+  # Each row of table has the format [day, wavelength, intensity]
   for day in days:
-    flux.append([row[2] for row in table if row[0] == day and not isnan(row[2])])
-
-  # Creates an array of zeros. 
-  flux2 = zeros(shape=(len(flux), len(flux[0])))
-    
-  # Now I'm taking that array, and turning the corresponding entries from flux into floats
-  for i in range(len(flux)):
-    for j in range(len(flux[i])):
-      flux2[i,j] = float(flux[i][j])
-    
+    fluxValues = []
+    waveValues = []
+    for row in table:
+      if row[0] == day:
+        # Calculate flux using intensity and wavelength
+        fluxValues.append((row[2] * row[1] * (10.0**-9)) / (h * c))
+        waveValues.append(row[1])
+    # Throw out days with NaN readings
+    if not isnan(fluxValues).any():
+      flux.append(fluxValues)
+      wavelengths.append(waveValues)
+        
   # Empty array for the series of integrals
   Qo2 = []
     
-  # Defining Constants
-  h = 6.626e-34
-  c = 2.99792458e8
-    
-  # Compute Qo2 for each day
-  for a in flux2:
-    # a is an array of intensities at each wavelength. h and c scale the integral.
-    Qo2.append(integ.simps((waves*10.0**-9)*a/(h*c), x=waves))
-    
+  # Compute Qo2 for each day's readings
+  for readings,wl in zip(flux, wavelengths):
+    Qo2.append(integ.simps(readings, x=wl))
+
   # Print the mean Qo2, 25th, and 75th percentile of deltaQo2.
   deltaQo2 = (Qo2 / mean(Qo2)) - 1
   print("Average value of Q(o2): " + str(mean(Qo2)))
@@ -89,4 +91,3 @@ def hw4():
   str(percentile(deltaQo2, 75)))
   
   # TODO: 7 onwards. Also, figure out the order-of-magnitude issue with our percentiles. Also, DeltaQO2 is plotted it looks wonky. 
-  
