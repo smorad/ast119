@@ -56,6 +56,7 @@ def hw4():
   # group flux readings into rows according to unique days, throwout NaN readings
   flux = []
   days = unique(table[:,0])
+  waves = unique(table[:,1])
   for day in days:
     flux.append([row[2] for row in table if row[0] == day and not isnan(row[2])])
 
