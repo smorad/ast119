@@ -11,8 +11,8 @@ from datetime import datetime
 import scipy.integrate as integ
 
 def fetch_file(
-  url = "http://lasp.colorado.edu/lisird/tss/sorce_ssi.csv?&time>=2010-01-01&time<2010-02-01",
-  localfile = "data"):
+  url = "http://lasp.colorado.edu/lisird/tss/sorce_ssi.csv?&time>=2010-01-01&time<2011-01-01",
+  localfile = "data_2010-01-01_2011-01-01"):
     
   # Download with urllib
   response = urllib2.urlopen(url)
@@ -26,32 +26,32 @@ def fetch_file(
   response.close()
   
   
-def get_date(prompt):
-  # Get valid user input and return as formatted string
-  dt_input = raw_input(prompt)
+def validateInput(dt_input):
+  # Check for valid user input and return true or false
   try:
     dt = datetime.strptime(dt_input, '%Y-%m-%d')
   except ValueError:
-    print "Incorrect format, please enter the date as YYYY-MM-DD."
-    return get_date(prompt)
+    return False
     
-  return dt.strftime('%Y-%m-%d')
+  return True
   
   
-def hw4():
+def hw4(dt_start = "2010-01-01", dt_end = "2011-01-01"):
+  # Validate and format user date input
+  if not validateInput(dt_start) or not validateInput(dt_end):
+    print "Incorrect format, please enter the date as YYYY-MM-DD"
+    return
+    
   # If data does not exist, fetch it
-  localfile = "data"
+  localfile = "data_" + dt_start + "_" + dt_end
   if not localfile in os.listdir('.'):
-    # Format user date input into target url
-    dt_start = get_date("Enter beginning date(YYYY-MM-DD): ")
-    dt_end = get_date("Enter non-inclusive ending date(YYYY-MM-DD): ")
-    url = "http://lasp.colorado.edu/lisird/tss/sorce_ssi.csv?&time>=" + dt_start + "&time<" + dt_end
-    
     print "Warning: file " + localfile + " not found; retrieving from the web"
-    fetch_file(url)
-  
+    url = "http://lasp.colorado.edu/lisird/tss/sorce_ssi.csv?&time>=" + dt_start + "&time<" + dt_end
+    fetch_file(url, localfile)
+    print "File successfully retrieved"
+    
   # Load table into multi dimensional array, [[day, wavelength, flux]...]
-  table = loadtxt("data", skiprows = (1), usecols = (0,1,2), delimiter = ",")
+  table = loadtxt(localfile, skiprows = (1), usecols = (0,1,2), delimiter = ",")
   
   # Extract all unique days
   days = unique(table[:,0])
@@ -82,9 +82,9 @@ def hw4():
     Qo2.append(integ.simps(readings, x=wavelengths))
 
   # Print the mean Qo2, 25th, and 75th percentile of deltaQo2.
-  deltaQo2 = (Qo2 / mean(Qo2)) - 1
+  deltaQo2 = (Qo2 / mean(Qo2)) - 1.0
   print("Average value of Q(o2): " + str(mean(Qo2)))
   print("Delta Q: 25th Percentile = " + str(percentile(deltaQo2, 25)) + ", 75th percentile = " +
   str(percentile(deltaQo2, 75)))
   
-  # TODO: 7 onwards. Also, figure out the order-of-magnitude issue with our percentiles. Also, DeltaQO2 is plotted it looks wonky. 
+  # TODO: 7 onwards. 
