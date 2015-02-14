@@ -9,6 +9,7 @@ import urllib2
 import os
 from datetime import datetime
 import scipy.integrate as integ
+import sys
 
 def fetch_file(
   url = "http://lasp.colorado.edu/lisird/tss/sorce_ssi.csv?&time>=2010-01-01&time<2011-01-01",
@@ -40,7 +41,7 @@ def hw4(dt_start = "2010-01-01", dt_end = "2011-01-01"):
   # Validate and format user date input
   if not validateInput(dt_start) or not validateInput(dt_end):
     print "Incorrect format, please enter the date as YYYY-MM-DD"
-    return
+    sys.exit(1)
     
   # If data does not exist, fetch it
   localfile = "data_" + dt_start + "_" + dt_end
@@ -83,8 +84,24 @@ def hw4(dt_start = "2010-01-01", dt_end = "2011-01-01"):
 
   # Print the mean Qo2, 25th, and 75th percentile of deltaQo2.
   deltaQo2 = (Qo2 / mean(Qo2)) - 1.0
+  perc25 = percentile(deltaQo2, 25)
+  perc75 = percentile(deltaQo2, 75)
   print("Average value of Q(o2): " + str(mean(Qo2)))
-  print("Delta Q: 25th Percentile = " + str(percentile(deltaQo2, 25)) + ", 75th percentile = " +
-  str(percentile(deltaQo2, 75)))
+  print("Delta Q: 25th Percentile = " + str(perc25) + ", 75th percentile = " +
+  str(perc75))
   
-  # TODO: 7 onwards. 
+  # Plot Data  
+  figure()
+  # Draw grey bar
+  fill_between(range(len(deltaQo2)), perc25, perc75, facecolor='grey')
+  # Label
+  dt_title= str(datetime.strptime(dt_start, '%Y-%m-%d')) + ' - ' + str(datetime.strptime(dt_end, '%Y-%m-%d'))
+  xlabel('Day')
+  ylabel('Delta Q(O2)')
+  title(dt_title)
+  # Plot Data
+  plot(range(len(deltaQo2)), deltaQo2)
+
+  # TODO: Part 8
+  
+  
