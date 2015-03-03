@@ -60,7 +60,7 @@ def hw5(m1, m2, a, e, tmax, tstep=0.001, tplot=0.025, method='leapfrog'):
         rv_list.append(copy.deepcopy(rv))
     else:
         # odeint
-        rv_list = integ.odeint(deriv, rv, arange(0, tmax, dt), (m1, m2))
+        rv_list = integ.odeint(deriv, rv, arange(0, tmax*period, dt), (m1, m2))
         # needed to calculate using tstep, but we want to plot
         # using tplot,
         t_interval = tplot / tstep
@@ -73,18 +73,17 @@ def hw5(m1, m2, a, e, tmax, tstep=0.001, tplot=0.025, method='leapfrog'):
         draw()
 
 def deriv(rv, dt, m1, m2):
-    # calc positions
+    # calc position deriv
     rv_copy = zeros(8)
     rv_copy[0] =  rv[2]
     rv_copy[1] =  rv[3]
     rv_copy[4] =  rv[6]
     rv_copy[5] =  rv[7]
     
-    # calc acceleration
+    # calc velocity deriv
     r = array([rv[0] - rv[4], rv[1] - rv[5]])
     force = ((sc.G*m1*m2)/(np.linalg.norm(r)**2))*(r/np.linalg.norm(r))
-    
-    # calc velocity
+
     rv_copy[2] =  - (force[0]/m1)
     rv_copy[3] =  - (force[1]/m1)
     rv_copy[6] =  + (force[0]/m2)
