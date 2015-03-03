@@ -58,6 +58,7 @@ def hw5(m1, m2, a, e, tmax, tstep=0.001, tplot=0.025, method='leapfrog'):
             
         # plot final position
         rv_list.append(copy.deepcopy(rv))
+        rv_list_plot = rv_list
     else:
         # odeint
         rv_list = integ.odeint(deriv, rv, arange(0, tmax*period, dt), (m1, m2))
