@@ -1,6 +1,8 @@
 from numpy import *
 from matplotlib.pyplot import *
 import scipy.constants as sc
+import copy
+import scipy.integrate as integ
 
 # test sun/earth with hw5(1.989e30,5.972e24,149.6e6,0.0167,1000)
 def hw5(m1, m2, a, e, tmax, tstep=0.001, tplot=0.025, method='leapfrog'):
@@ -24,6 +26,7 @@ def hw5(m1, m2, a, e, tmax, tstep=0.001, tplot=0.025, method='leapfrog'):
     xlim([-2*a, 2*a])
     ylim([-2*a, 2*a])
     
+    rv_list = []
     if method == 'leapfrog':
         timeCounter = 0
         frameCounter = 0
@@ -31,9 +34,7 @@ def hw5(m1, m2, a, e, tmax, tstep=0.001, tplot=0.025, method='leapfrog'):
             # plot positions if tplot time has passed
             if frameCounter >= tplot:
                 frameCounter = 0
-                plot(rv[0],rv[1],'bo')
-                plot(rv[4],rv[5],'go')
-                draw()
+                rv_list.append(copy.deepcopy(rv))
                 
             # calc positions
             rv[0] = rv[0] + rv[2]*dt
@@ -56,9 +57,37 @@ def hw5(m1, m2, a, e, tmax, tstep=0.001, tplot=0.025, method='leapfrog'):
             frameCounter += tstep
             
         # plot final position
-        plot(rv[0],rv[1],'bo')
-        plot(rv[4],rv[5],'go')
-        draw()
+        rv_list.append(copy.deepcopy(rv))
     else:
         # odeint
-        print("not implemented")
+        rv_list = integ.odeint(deriv, rv, arange(0, tmax, dt), (m1, m2))
+        # needed to calculate using tstep, but we want to plot
+        # using tplot,
+        t_interval = tplot / tstep
+        rv_list_plot = rv_list[::t_interval]
+
+    # plot
+    for i in range(len(rv_list_plot)):
+        plot(rv_list_plot[i][0],rv_list_plot[i][1],'bo')
+        plot(rv_list_plot[i][4],rv_list_plot[i][5],'go')
+        draw()
+
+def deriv(rv, dt, m1, m2):
+    # calc positions
+    rv_copy = zeros(8)
+    rv_copy[0] =  rv[2]
+    rv_copy[1] =  rv[3]
+    rv_copy[4] =  rv[6]
+    rv_copy[5] =  rv[7]
+    
+    # calc acceleration
+    r = array([rv[0] - rv[4], rv[1] - rv[5]])
+    force = ((sc.G*m1*m2)/(np.linalg.norm(r)**2))*(r/np.linalg.norm(r))
+    
+    # calc velocity
+    rv_copy[2] =  - (force[0]/m1)
+    rv_copy[3] =  - (force[1]/m1)
+    rv_copy[6] =  + (force[0]/m2)
+    rv_copy[7] =  + (force[1]/m2)
+    
+    return rv_copy
