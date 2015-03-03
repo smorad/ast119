@@ -1,51 +1,77 @@
 from numpy import *
 from matplotlib.pyplot import *
-import scipy
+import scipy.constants as sc
 from collections import OrderedDict
+import time
 
-def space(nsteps=10000):
-    #Using a dict will let us assign x, y, a, v(x,y), m 
-    #and whatever other values we need to the particle
+"""
+  Updates the position of all objects
+"""
+def calc_position(obj):
+    for i in range(len(obj)):
+        obj[i][0] += obj[i][1] 
+  
+"""
+  Calculates the acceleration for all objects
+"""
+def calc_force(obj):
+    for i in range(len(obj)):
+        obj[i][2] = array([0.0,0.0])
+        for j in range(len(obj)):
+            if obj[i][3] != obj[j][3]:
+                r = obj[j][0]-obj[i][0]
+                obj[i][2] += ((sc.G*obj[j][3])/(np.linalg.norm(r)**2))*(r/np.linalg.norm(r))
+  
+"""
+  Updates the velocity of all objects
+"""
+def calc_velocity(obj):
+    for i in range(len(obj)):
+        obj[i][1] += obj[i][2]
+
+"""
+  Plots the result of the simulation as an animation.
+  This code needs to be cleaned up.
+"""
+def animate_plot(particle):
+    fig = figure(1)
+    for i in range(len(particle['x'][0])):
+        cla()
+        gca().set_aspect('equal')
+        # These limits should actually be calculated
+        xlim([-2.9e8, 2.9e8])
+        ylim([-2.9e8, 2.9e8])
+        for j in range(len(particle['x'])):
+            plot(particle['x'][j][i], particle['y'][j][i],'o')
+        draw()
+        time.sleep(0.016)
+        
+        
+def nbody(steps=1000, tplot=12):
+    # Play values for the solar system. The velocity needs to actually be calculated.
+    obj=[[array([4.41673502e+02,0.0]),array([0.0,2.87592295]),array([0.00,0.00]),1.989e30]]
+    obj.append([array([-5.7910e+07,0.0]),array([0.0,-15.57838370e+05]),array([0.00,0.00]),0.3301e24])
+    obj.append([array([-10.820e+07,0.0]),array([0.0,-11.27838370e+05]),array([0.00,0.00]),4.87e24])
+    obj.append([array([-1.47101238e+08,0.0]),array([0.0,-9.57838370e+05]),array([0.00,0.00]),5.972e24])
+    obj.append([array([-22.790e+07,0.0]),array([0.0,-7.67838370e+05]),array([0.00,0.00]),0.642e24])
+    
+    # Initialize particle lists for each particle. This data structure needs to be simplified.
     particle = {'x': [], 'y': []}
-    
-    #what do the entries in the obj array correspond to?
-    #I'd like to help but I don't understand :P 
-    obj=[[array([0.00,150000000000.00]),array([107280000.00,0.00]),array([0.00,0.00]),5.972e28],[array([0.00,0.00]),array([0.00,0.00]),array([0.00,0.00]),1.989e30]]
-    obj.append([array([0.00,50000000000.00]),array([207280000.00,0.00]),array([0.00,0.00]),3e25])
-    
-    #using _ saves us an 8 byte ptr and lets the reader know iterator has no meaning
     for _ in range(len(obj)):
         particle['x'].append([])
         particle['y'].append([])
     
-    fobj = obj
-    #Is this acceleration of particle due to gravity?
-    g=00.0008649296639999999
-    for _ in range(nsteps):
-        for o in range(len(obj)):
-            fobj[o][0] += obj[o][1]
-            fobj[o][1] += obj[o][2]  
-            
-            fobj[o][2] = array([00.00,00.00])
-            for a in range(len(obj)):
-                if obj[o][3] != obj[a][3]:
-                    direct = obj[a][0]-obj[o][0]
-                    fobj[o][2] = fobj[o][2] + (
-                        (direct * g * obj[a][3]) / 
-                        ((direct[0]**2 + direct[1]**2)**(1.5)))
-            
-        obj = fobj
+    # Step through simulation and build a list of all points to plot
+    for timeCount in range(steps):
+        calc_position(obj)
+        calc_force(obj)
+        calc_velocity(obj)
         
-        for b in range(len(obj)):
-            particle['x'][b].append(obj[b][0][0])
-            particle['y'][b].append(obj[b][0][1])
-        
-    fig = figure()
-    ax = fig.add_subplot(111, aspect='equal')
-    for b in range(len(obj)):
-        plot(particle['x'][b], particle['y'][b])
-    
-    #plot(planet2posx,planet2posy, 'r', lw=2)
-    #xlim([-1.6e11,1.6e11])
-    #ylim([-1.6e11,1.6e11])
-    draw()
+        # Only plot every tplot step of the simulation.
+        if timeCount % tplot == 0:
+            for i in range(len(obj)):
+                particle['x'][i].append(obj[i][0][0])
+                particle['y'][i].append(obj[i][0][1])
+                
+    # Play back the result of the simulation.
+    animate_plot(particle)
