@@ -47,6 +47,9 @@ def animate_plot(particle):
         time.sleep(0.016)
         
         
+def TheMaster(eccenmin=0.0,eccenmax=1.0,Pasamin=2.0,PaSamax0):
+    nbody()
+  
 def nbody(steps=1000, tplot=12):
     # Play values for the solar system. The velocity needs to actually be calculated.
     obj=[[array([4.41673502e+02,0.0]),array([0.0,2.87592295]),array([0.00,0.00]),1.989e30]]
