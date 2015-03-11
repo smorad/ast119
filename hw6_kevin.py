@@ -98,14 +98,12 @@ def hw6(length=1.0, ncell=200,trun=500.0,tplot=20.0,heatradius=.25,heatrate=2.0,
 		if t % 20 == 0:
 			title_val = t
 		if t%20==0:
-			print t
-			print t%20
 			clf()
 			imshow(temp_dist, aspect='equal',origin='lower',extent=(-length/2,length/2,-length/2,length/2),vmin=0,vmax=highesttemp)
 			xlabel('x')
 			ylabel('y')
 			colorbar()
-    		title('Time = {} sec'.format(title_val / 20 * 20))
+    		title('Time = {} sec'.format(title_val))
     		draw()
     		time.sleep(0.1)
 		t = t+dt
