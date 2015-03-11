@@ -95,17 +95,20 @@ def hw6(length=1.0, ncell=200,trun=500.0,tplot=20.0,heatradius=.25,heatrate=2.0,
 		#diffuse the temperature for the whole 500 seconds
 		temp_dist[1:-1,1:-1] = 0.2 * (temp_dist[1:-1,1:-1] + temp_dist[0:-2,1:-1] + temp_dist[2:,1:-1] + temp_dist[1:-1,0:-2] + temp_dist[1:-1,2:])
 
+		if t % 20 == 0:
+			title_val = t
 		if t%20==0:
+			print t
+			print t%20
 			clf()
 			imshow(temp_dist, aspect='equal',origin='lower',extent=(-length/2,length/2,-length/2,length/2),vmin=0,vmax=highesttemp)
 			xlabel('x')
 			ylabel('y')
 			colorbar()
-    		title('Time = %d sec'%t)
+    		title('Time = {} sec'.format(title_val / 20 * 20))
     		draw()
     		time.sleep(0.1)
 		t = t+dt
-		print t
 
 #TODO: fix the plotting intervals (it's plotting every second instead of every twenty and idk why mod isn't working like i expect it to)
 #check for errors and add notes so the TA can see what we doin
