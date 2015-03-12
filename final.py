@@ -48,7 +48,7 @@ def animate_plot(particle):
         draw()
         time.sleep(0.016)
 
-def simulate(e,pasa,steps=100,tplot=12):
+def simulate(e,pasa,steps=100000,tplot=12):
     # Play values for the solar system. The velocity needs to actually be calculated.
     
     Mstar=1.989e30
@@ -77,13 +77,27 @@ def simulate(e,pasa,steps=100,tplot=12):
         
         dist=np.linalg.norm(obj[0][0])
         Vesc=sqrt(2*sc.G*2*Mstar/dist)
+        #print linalg.norm(obj[0][1]), Vesc, dist,(6*sc.au)
         if linalg.norm(obj[0][1]) > Vesc and dist>(6*sc.au):
              return(timeCount)
     # Play back the result of the simulation.
     #animate_plot(particle)
     
-         
+    animate_plot(particle)
     return(steps)
+
+def animate_plot(particle):
+    fig = figure(1)
+    for i in range(len(particle['x'][0])):
+        cla()
+        gca().set_aspect('equal')
+        # These limits should actually be calculated
+        #xlim([-pasa*0.6*sc.au, pasa*0.6*sc.au])
+        #ylim([-pasa*0.6*sc.au, pasa*0.6*sc.au])
+        for j in range(len(particle['x'])):
+            plot(particle['x'][j][i], particle['y'][j][i],'o')
+        draw()
+        time.sleep(0.016)
 
 def draw_plot(results):
     i = []
@@ -101,7 +115,7 @@ def draw_plot(results):
     imshow(Z, aspect='auto', origin='lower', extent=(i[0],i[-1],j[0],j[-1]), cmap=cm.spectral)
     colorbar()
 
-def final(emin=0.0,emax=1.0,pmin=2.0,pmax=5.0):
+def final(emin=0.0,emax=0.99,pmin=2.0,pmax=5.0):
     """
     Accepts optional values for the min and max values for e,
     the eccentricity of the stars' orbits, and p, the ratio of the
@@ -111,8 +125,8 @@ def final(emin=0.0,emax=1.0,pmin=2.0,pmax=5.0):
     pasa = linspace(pmin, pmax, 15)
     
     results = []
-    for i in e:
-        for j in pasa:
-            results.append(array([i, j, simulate(e=i, pasa=j)]))
-            
+    #for i in e:
+    #    for j in pasa:
+    results.append(array([0.99, 3, simulate(e=0.99, pasa=1.2)]))
+    #print results
     draw_plot(results)
