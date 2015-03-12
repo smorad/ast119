@@ -11,7 +11,7 @@ import matplotlib.cm as cm
 """
 def calc_position(obj):
     for i in range(len(obj)):
-        obj[i][0] += obj[i][1] 
+        obj[i][0] += obj[i][1]
   
 """
   Calculates the acceleration for all objects
@@ -87,7 +87,7 @@ def draw_plot(results):
         j.append(results[a][1])
         z.append(results[a][2])
     xi = linspace(min(i), max(i),15)
-    yj = linspace(min(j), max(j),15)  
+    yj = linspace(min(j), max(j),15)
     X,Y = meshgrid(xi,yj)
     Z = ml.griddata(i,j,z,xi,yj)
 
@@ -95,9 +95,9 @@ def draw_plot(results):
     colorbar()
 
 def final(emin=0.0,emax=1.0,pmin=2.0,pmax=5.0):
-    """ 
-    Accepts optional values for the min and max values for e, 
-    the eccentricity of the stars' orbits, and p, the ratio of the 
+    """
+    Accepts optional values for the min and max values for e,
+    the eccentricity of the stars' orbits, and p, the ratio of the
     planets semi-major axis to the star's semi-major axis.
     """
     e = linspace(emin, emax, 15)
