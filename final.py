@@ -48,13 +48,14 @@ def animate_plot(particle):
         draw()
         time.sleep(0.016)
 
-def simulate(e,pasa,steps=10,tplot=12):
+def simulate(e,pasa,steps=100,tplot=12):
     # Play values for the solar system. The velocity needs to actually be calculated.
-    obj=[[array([4.41673502e+02,0.0]),array([0.0,2.87592295]),array([0.00,0.00]),1.989e30]]
-    obj.append([array([-5.7910e+07,0.0]),array([0.0,-15.57838370e+05]),array([0.00,0.00]),0.3301e24])
-    obj.append([array([-10.820e+07,0.0]),array([0.0,-11.27838370e+05]),array([0.00,0.00]),4.87e24])
-    obj.append([array([-1.47101238e+08,0.0]),array([0.0,-9.57838370e+05]),array([0.00,0.00]),5.972e24])
-    obj.append([array([-22.790e+07,0.0]),array([0.0,-7.67838370e+05]),array([0.00,0.00]),0.642e24])
+    
+    Mstar=1.989e30
+    VnotV= (0.5)*sqrt((1.0+e)/(1.0-e))*sqrt(sc.G*(2.0*Mstar)/(0.5*sc.au))
+    obj=[[array([pasa*0.5*sc.au,0.0]),array([0.0,sqrt(sc.G*2*Mstar/(pasa*0.5*sc.au))]),array([0.00,0.00]),5.97e24]]
+    obj.append([array([0.5*sc.au,0.0]),array([0.0,VnotV]),array([0.00,0.00]),Mstar])
+    obj.append([array([-0.5*sc.au,0.0]),array([0.0,-1*VnotV]),array([0.00,0.00]),Mstar])
     
     # Initialize particle lists for each particle. This data structure needs to be simplified.
     particle = {'x': [], 'y': []}
@@ -73,10 +74,16 @@ def simulate(e,pasa,steps=10,tplot=12):
             for i in range(len(obj)):
                 particle['x'][i].append(obj[i][0][0])
                 particle['y'][i].append(obj[i][0][1])
-                
+        
+        dist=np.linalg.norm(obj[0][0])
+        Vesc=sqrt(2*sc.G*2*Mstar/dist)
+        if linalg.norm(obj[0][1]) > Vesc and dist>(6*sc.au):
+             return(timeCount)
     # Play back the result of the simulation.
     #animate_plot(particle)
-    return(42)
+    
+         
+    return(steps)
 
 def draw_plot(results):
     i = []
@@ -91,7 +98,7 @@ def draw_plot(results):
     X,Y = meshgrid(xi,yj)
     Z = ml.griddata(i,j,z,xi,yj)
 
-    imshow(Z, aspect='auto', origin='lower', extent=(i[0],i[-1],j[0],j[-1]), cmap=cm.prism)
+    imshow(Z, aspect='auto', origin='lower', extent=(i[0],i[-1],j[0],j[-1]), cmap=cm.spectral)
     colorbar()
 
 def final(emin=0.0,emax=1.0,pmin=2.0,pmax=5.0):
@@ -106,6 +113,6 @@ def final(emin=0.0,emax=1.0,pmin=2.0,pmax=5.0):
     results = []
     for i in e:
         for j in pasa:
-            results.append(array([i, j, simulate(eccentricity=i, pasa=j)]))
+            results.append(array([i, j, simulate(e=i, pasa=j)]))
             
     draw_plot(results)
