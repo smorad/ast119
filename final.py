@@ -9,9 +9,9 @@ import matplotlib.cm as cm
 """
   Updates the position of all objects
 """
-def calc_position(obj):
+def calc_position(obj,scale):
     for i in range(len(obj)):
-        obj[i][0] += obj[i][1]
+        obj[i][0] += obj[i][1] * scale
   
 """
   Calculates the acceleration for all objects
@@ -23,13 +23,13 @@ def calc_force(obj):
             if obj[i][3] != obj[j][3]:
                 r = obj[j][0]-obj[i][0]
                 obj[i][2] += ((sc.G*obj[j][3])/(np.linalg.norm(r)**2))*(r/np.linalg.norm(r))
-  
+
 """
   Updates the velocity of all objects
 """
-def calc_velocity(obj):
+def calc_velocity(obj,scale):
     for i in range(len(obj)):
-        obj[i][1] += obj[i][2]
+        obj[i][1] += obj[i][2] * scale
 
 """
   Plots the result of the simulation as an animation.
@@ -41,21 +41,24 @@ def animate_plot(particle):
         cla()
         gca().set_aspect('equal')
         # These limits should actually be calculated
-        xlim([-2.9e8, 2.9e8])
-        ylim([-2.9e8, 2.9e8])
+        xlim([-2e11, 2e11])
+        ylim([-2e11, 2e11])
         for j in range(len(particle['x'])):
             plot(particle['x'][j][i], particle['y'][j][i],'o')
         draw()
         time.sleep(0.016)
 
-def simulate(e,pasa,steps=100000,tplot=12):
-    # Play values for the solar system. The velocity needs to actually be calculated.
-    
-    Mstar=1.989e30
-    VnotV= (0.5)*sqrt((1.0+e)/(1.0-e))*sqrt(sc.G*(2.0*Mstar)/(0.5*sc.au))
-    obj=[[array([pasa*0.5*sc.au,0.0]),array([0.0,sqrt(sc.G*2*Mstar/(pasa*0.5*sc.au))]),array([0.00,0.00]),5.97e24]]
-    obj.append([array([0.5*sc.au,0.0]),array([0.0,VnotV]),array([0.00,0.00]),Mstar])
-    obj.append([array([-0.5*sc.au,0.0]),array([0.0,-1*VnotV]),array([0.00,0.00]),Mstar])
+# Scale is your time step unit in seconds, default is in hours
+def simulate(e,pasa,steps=2000,tplot=10,scale=3600):
+    # Initialize variables for simulation bodies
+    mStar = 1.989e30
+    v0 = 0.5*sqrt((1.0+e)/(1.0-e)) * sqrt(2*sc.G*mStar/(0.5*sc.au))
+    sb = 0.5*sc.au*(1-e) / (1+e)
+    obj = [
+            [array([0.5*pasa*sc.au,0.0]),array([0.0,sqrt(sc.G*2*mStar/(pasa*0.5*sc.au))]),array([0.00,0.00]), 5.97e24],
+            [array([sb, 0.0]), array([0.0, v0]), array([0.00, 0.00]), mStar],
+            [array([-1*sb, 0.0]), array([0.0, -1*v0]), array([0.00, 0.00]), mStar]
+          ]
     
     # Initialize particle lists for each particle. This data structure needs to be simplified.
     particle = {'x': [], 'y': []}
@@ -65,9 +68,9 @@ def simulate(e,pasa,steps=100000,tplot=12):
     
     # Step through simulation and build a list of all points to plot
     for timeCount in range(steps):
-        calc_position(obj)
+        calc_position(obj, scale)
         calc_force(obj)
-        calc_velocity(obj)
+        calc_velocity(obj, scale)
         
         # Only plot every tplot step of the simulation.
         if timeCount % tplot == 0:
@@ -75,29 +78,16 @@ def simulate(e,pasa,steps=100000,tplot=12):
                 particle['x'][i].append(obj[i][0][0])
                 particle['y'][i].append(obj[i][0][1])
         
-        dist=np.linalg.norm(obj[0][0])
-        Vesc=sqrt(2*sc.G*2*Mstar/dist)
+        #dist = np.linalg.norm(obj[0][0])
+        #vEsc = sqrt(2*sc.G*2*mStar/dist)
         #print linalg.norm(obj[0][1]), Vesc, dist,(6*sc.au)
-        if linalg.norm(obj[0][1]) > Vesc and dist>(6*sc.au):
-             return(timeCount)
+        #if linalg.norm(obj[0][1]) > vEsc and dist > (6*sc.au):
+        #     return(timeCount)
+             
     # Play back the result of the simulation.
-    #animate_plot(particle)
-    
     animate_plot(particle)
+    
     return(steps)
-
-def animate_plot(particle):
-    fig = figure(1)
-    for i in range(len(particle['x'][0])):
-        cla()
-        gca().set_aspect('equal')
-        # These limits should actually be calculated
-        #xlim([-pasa*0.6*sc.au, pasa*0.6*sc.au])
-        #ylim([-pasa*0.6*sc.au, pasa*0.6*sc.au])
-        for j in range(len(particle['x'])):
-            plot(particle['x'][j][i], particle['y'][j][i],'o')
-        draw()
-        time.sleep(0.016)
 
 def draw_plot(results):
     i = []
@@ -127,6 +117,6 @@ def final(emin=0.0,emax=0.99,pmin=2.0,pmax=5.0):
     results = []
     #for i in e:
     #    for j in pasa:
-    results.append(array([0.99, 3, simulate(e=0.99, pasa=1.2)]))
+    results.append(array([0.99, 3, simulate(e=0.016, pasa=2)]))
     #print results
-    draw_plot(results)
+    #draw_plot(results)
