@@ -20,7 +20,7 @@ def calc_force(obj):
     for i in range(len(obj)):
         obj[i][2] = array([0.0,0.0])
         for j in range(len(obj)):
-            if obj[i][3] != obj[j][3]:
+            if i != j:
                 r = obj[j][0]-obj[i][0]
                 obj[i][2] += ((sc.G*obj[j][3])/(np.linalg.norm(r)**2))*(r/np.linalg.norm(r))
 
