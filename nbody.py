@@ -2,12 +2,14 @@ from numpy import *
 from matplotlib.pyplot import *
 import scipy.constants as sc
 from collections import OrderedDict
+import matplotlib.mlab as ml
 import time
+import matplotlib.cm as cm
 
 """
   Updates the position of all objects
 """
-def calc_position(obj, scale):
+def calc_position(obj,scale):
     for i in range(len(obj)):
         obj[i][0] += obj[i][1] * scale
   
@@ -18,14 +20,14 @@ def calc_force(obj):
     for i in range(len(obj)):
         obj[i][2] = array([0.0,0.0])
         for j in range(len(obj)):
-            if obj[i][3] != obj[j][3]:
+            if obj[i][4] != obj[j][4]:
                 r = obj[j][0]-obj[i][0]
                 obj[i][2] += ((sc.G*obj[j][3])/(np.linalg.norm(r)**2))*(r/np.linalg.norm(r))
-  
+
 """
   Updates the velocity of all objects
 """
-def calc_velocity(obj, scale):
+def calc_velocity(obj,scale):
     for i in range(len(obj)):
         obj[i][1] += obj[i][2] * scale
 
@@ -35,25 +37,41 @@ def calc_velocity(obj, scale):
 """
 def animate_plot(particle):
     fig = figure(1)
+    
+    
+    
     for i in range(len(particle['x'][0])):
         cla()
+        listofx= list(particle['x'][0])+list(particle['x'][1])+list(particle['x'][2])
+        listofy= list(particle['y'][0])+list(particle['y'][1])+list(particle['y'][2])
+        xlim([min(listofx), max(listofx)])
+        ylim([min(listofy), max(listofy)])
         gca().set_aspect('equal')
-        # These limits should actually be calculated
-        xlim([-2.9e11, 2.9e11])
-        ylim([-2.9e11, 2.9e11])
         for j in range(len(particle['x'])):
             plot(particle['x'][j][i], particle['y'][j][i],'o')
         draw()
         time.sleep(0.016)
-  
-def nbody(steps=2111, tplot=12, scale=36000):
-    # Play values for the solar system. The velocity needs to actually be calculated.
-    obj=[[array([4.41673502e+2,0.0]),array([0.0,0.0]),array([0.00,0.00]),1.989e30]]
-    obj.append([array([-5.7910e+10,0.0]),array([0.0,-4.7360e+4]),array([0.00,0.00]),3.301e23])
-    obj.append([array([-1.0820e+11,0.0]),array([0.0,-3.5020e+4]),array([0.00,0.00]),4.87e24])
-    obj.append([array([-1.4960e+11,0.0]),array([0.0,-2.9780e+4]),array([0.00,0.00]),5.972e24])
-    obj.append([array([-2.27920e+11,0.0]),array([0.0,-2.4070e+4]),array([0.00,0.00]),0.642e24])
 
+# Scale is your time step unit in seconds, default is in hours
+def simulate(e,pasa,steps=10000,tplot=10,scale=3600):
+    # Initialize variables for simulation bodies
+    mStar = 1.989e30
+    v0 = 0.5*sqrt((1.0+e)/(1.0-e)) * sqrt(sc.G*2.0*mStar/(0.5*sc.au))
+    sa = 0.5*sc.au*pasa
+    sb=(1-e)*sa*(0.5)
+    #Define the initial conditions
+    #Giving the planet a starting setup as if it were to enter a circular orbit around a 2Mstar point mass
+    
+    #(position, velocity, acceleration, mass, identifier)
+    #Planet
+    #Star1
+    #Star2
+    obj = [
+            [array([0.5*pasa*sc.au,0.0]),array([0.0,sqrt(sc.G*2*mStar/(pasa*0.5*sc.au))]),array([0.00,0.00]), 5.97e24, 1],
+            [array([sb, 0.0]), array([0.0, v0]), array([0.00, 0.00]), mStar, 2],
+            [array([-1*sb, 0.0]), array([0.0, -1*v0]), array([0.00, 0.00]), mStar, 3]
+          ]
+    
     # Initialize particle lists for each particle. This data structure needs to be simplified.
     particle = {'x': [], 'y': []}
     for _ in range(len(obj)):
@@ -62,6 +80,7 @@ def nbody(steps=2111, tplot=12, scale=36000):
     
     # Step through simulation and build a list of all points to plot
     for timeCount in range(steps):
+        #print(str(obj[1][1][0]) + "," + str(obj[1][1][1]) + " " + str(obj[2][1][0]) + "," + str(obj[2][1][1]) + " \n")
         calc_position(obj, scale)
         calc_force(obj)
         calc_velocity(obj, scale)
@@ -71,6 +90,49 @@ def nbody(steps=2111, tplot=12, scale=36000):
             for i in range(len(obj)):
                 particle['x'][i].append(obj[i][0][0])
                 particle['y'][i].append(obj[i][0][1])
-                
+        
+        dist = np.linalg.norm(obj[0][0])
+        vEsc = sqrt(2*sc.G*2*mStar/dist)
+        #print linalg.norm(obj[0][1]), Vesc, dist,(4*sc.au)
+        if linalg.norm(obj[0][1]) > vEsc and dist > (0.5*sc.au*pasa):
+             return(timeCount)
+             
     # Play back the result of the simulation.
-    animate_plot(particle)
+    #animate_plot(particle)
+    
+    return(steps)
+
+def draw_plot(results):
+    i = []
+    j = []
+    z = []
+    for a in range(len(results)):
+        i.append(results[a][0])
+        j.append(results[a][1])
+        z.append(results[a][2])
+    xi = list(set(i))
+    yj = list(set(j))
+    
+    Z=array(z).reshape(len(xi),len(yj))
+    imshow(Z, aspect='auto', origin='lower', extent=(i[0],i[-1],j[0],j[-1]), interpolation='nearest',cmap=cm.spectral)
+    xlabel("Stellar Eccentricity")
+    ylabel("Planet Semi Major / Stellar Semi Major")
+    title("Hours survived for given eccentricity and ratio")
+    colorbar()
+    draw()
+
+def final(emin=0.0,emax=0.99,pmin=2.0,pmax=5.0):
+    """
+    Accepts optional values for the min and max values for e,
+    the eccentricity of the stars' orbits, and p, the ratio of the
+    planets semi-major axis to the star's semi-major axis.
+    """
+    e = linspace(emin, emax, 15)
+    pasa = linspace(pmin, pmax, 15)
+    
+    results = []
+    for i in e:
+        for j in pasa:
+            results.append(array([i, j, simulate(e=i, pasa=j)]))
+    #print results
+    draw_plot(results)
