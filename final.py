@@ -20,7 +20,7 @@ def calc_force(obj):
     for i in range(len(obj)):
         obj[i][2] = array([0.0,0.0])
         for j in range(len(obj)):
-            if i != j:
+            if obj[i][4] != obj[j][4]:
                 r = obj[j][0]-obj[i][0]
                 obj[i][2] += ((sc.G*obj[j][3])/(np.linalg.norm(r)**2))*(r/np.linalg.norm(r))
 
@@ -37,30 +37,44 @@ def calc_velocity(obj,scale):
 """
 def animate_plot(particle):
     fig = figure(1)
+    
+    
+    
     for i in range(len(particle['x'][0])):
         cla()
+        listofx= list(particle['x'][0])+list(particle['x'][1])+list(particle['x'][2])
+        listofy= list(particle['y'][0])+list(particle['y'][1])+list(particle['y'][2])
+        xlim([min(listofx), max(listofx)])
+        ylim([min(listofy), max(listofy)])
         gca().set_aspect('equal')
-        # These limits should actually be calculated
-        xlim([-2e11, 2e11])
-        ylim([-2e11, 2e11])
         for j in range(len(particle['x'])):
             plot(particle['x'][j][i], particle['y'][j][i],'o')
         draw()
         time.sleep(0.016)
 
 # Scale is your time step unit in seconds, default is in hours
-def simulate(e,pasa,steps=2000,tplot=10,scale=3600):
+def simulate(e,pasa,steps=50000,tplot=10,scale=3600):
     # Initialize variables for simulation bodies
     mStar = 1.989e30
-    v0 = 0.5*sqrt((1.0+e)/(1.0-e)) * sqrt(2*sc.G*mStar/(0.5*sc.au))
-    sb = 0.5*sc.au*(1-e) / (1+e)
+    v0 = 0.5*sqrt((1.0+e)/(1.0-e)) * sqrt(sc.G*2.0*mStar/(0.5*sc.au))
+    sa = 0.5*sc.au
+    r0=(1-e)*sa/(2.0)
+    #Define the initial conditions
+    #Giving the planet a starting setup as if it were to enter a circular orbit around a 2Mstar point mass
+    
+    #(position, velocity, acceleration, mass, identifier)
+    #Planet
+    #Star1
+    #Star2
     obj = [
-            [array([0.5*pasa*sc.au,0.0]),array([0.0,sqrt(sc.G*2*mStar/(pasa*0.5*sc.au))]),array([0.00,0.00]), 5.97e24],
-            [array([sb, 0.0]), array([0.0, v0]), array([0.00, 0.00]), mStar],
-            [array([-1*sb, 0.0]), array([0.0, -1*v0]), array([0.00, 0.00]), mStar]
+            [array([0.5*pasa*sc.au,0.0]),array([0.0,sqrt(sc.G*2*mStar/(pasa*0.5*sc.au))]),array([0.00,0.00]), 5.97e24, 1],
+            [array([r0, 0.0]), array([0.0, v0]), array([0.00, 0.00]), mStar, 2],
+            [array([-1.0*r0, 0.0]), array([0.0, -1*v0]), array([0.00, 0.00]), mStar, 3]
           ]
     
     # Initialize particle lists for each particle. This data structure needs to be simplified.
+    # I, another preson, personally think the structure is fine.
+    #   Well, yeah, it's weird. But, hey. It works!
     particle = {'x': [], 'y': []}
     for _ in range(len(obj)):
         particle['x'].append([])
@@ -68,6 +82,7 @@ def simulate(e,pasa,steps=2000,tplot=10,scale=3600):
     
     # Step through simulation and build a list of all points to plot
     for timeCount in range(steps):
+        #print(str(obj[1][1][0]) + "," + str(obj[1][1][1]) + " " + str(obj[2][1][0]) + "," + str(obj[2][1][1]) + " \n")
         calc_position(obj, scale)
         calc_force(obj)
         calc_velocity(obj, scale)
@@ -78,14 +93,14 @@ def simulate(e,pasa,steps=2000,tplot=10,scale=3600):
                 particle['x'][i].append(obj[i][0][0])
                 particle['y'][i].append(obj[i][0][1])
         
-        #dist = np.linalg.norm(obj[0][0])
-        #vEsc = sqrt(2*sc.G*2*mStar/dist)
-        #print linalg.norm(obj[0][1]), Vesc, dist,(6*sc.au)
-        #if linalg.norm(obj[0][1]) > vEsc and dist > (6*sc.au):
-        #     return(timeCount)
+        dist = np.linalg.norm(obj[0][0])
+        vEsc = sqrt(2*sc.G*2*mStar/dist)
+        #print linalg.norm(obj[0][1]), Vesc, dist,(4*sc.au)
+        if linalg.norm(obj[0][1]) > vEsc and dist > (0.5*sc.au*pasa):
+             return(timeCount)
              
     # Play back the result of the simulation.
-    animate_plot(particle)
+    #animate_plot(particle)
     
     return(steps)
 
@@ -97,26 +112,29 @@ def draw_plot(results):
         i.append(results[a][0])
         j.append(results[a][1])
         z.append(results[a][2])
-    xi = linspace(min(i), max(i),15)
-    yj = linspace(min(j), max(j),15)
-    X,Y = meshgrid(xi,yj)
-    Z = ml.griddata(i,j,z,xi,yj)
-
-    imshow(Z, aspect='auto', origin='lower', extent=(i[0],i[-1],j[0],j[-1]), cmap=cm.spectral)
+    xi = list(set(i))
+    yj = list(set(j))
+    
+    Z=array(z).reshape(len(yj),len(xi))
+    imshow(Z, aspect='auto', origin='lower', extent=(yj[0],yj[-1],xi[0],xi[-1]), interpolation='nearest',cmap=cm.spectral)
+    ylabel("Stellar Eccentricity")
+    xlabel("Planet Semi Major / Stellar Semi Major")
+    title("Hours survived for given eccentricity and ratio")
     colorbar()
+    draw()
 
-def final(emin=0.0,emax=0.99,pmin=2.0,pmax=5.0):
+def final(emin=0.0,emax=0.99,pmin=1.1,pmax=5.0,datadensity=30):
     """
     Accepts optional values for the min and max values for e,
     the eccentricity of the stars' orbits, and p, the ratio of the
     planets semi-major axis to the star's semi-major axis.
     """
-    e = linspace(emin, emax, 15)
-    pasa = linspace(pmin, pmax, 15)
+    e = linspace(emin, emax, datadensity)
+    pasa = linspace(pmin, pmax, datadensity)
     
     results = []
-    #for i in e:
-    #    for j in pasa:
-    results.append(array([0.99, 3, simulate(e=0.016, pasa=2)]))
+    for i in e:
+        for j in pasa:
+            results.append(array([i, j, simulate(e=i, pasa=j)]))
     #print results
-    #draw_plot(results)
+    draw_plot(results)
