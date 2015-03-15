@@ -116,7 +116,7 @@ def draw_plot(results, emin, emax, pmin, pmax):
 	yj = list(set(j))
 	
 	Z=array(z).reshape(len(yj),len(xi))
-	imshow(Z, aspect='auto', origin='lower', extent=(pmin,pmax,emin,emax), interpolation='nearest',cmap=cm.spectral)
+	imshow(Z, aspect='auto', origin='lower', extent=(pmin,pmax,emin,emax), interpolation='nearest',cmap=cm.gist_heat)
 	ylabel("Stellar Eccentricity")
 	xlabel("Planet Semi Major / Stellar Semi Major")
 	title("Hours survived for given eccentricity and ratio")
